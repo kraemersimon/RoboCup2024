@@ -11,27 +11,46 @@ time.sleep(2) # wait for Nano to reboot
 LEFT_MOTOR = 0
 RIGHT_MOTOR = 1
 
+
+# linefollowing paramters
+BASE_SPEED = 150
+SENSITIVITY = 3
+
 def send_motor_command(motor, direction, speed):
-    speed = min(speed, 255)  # Begrenzen Sie die Geschwindigkeit auf 255
+    speed = min(speed, 255)
+    speed = speed // 4
     command = (motor << 7) | (direction << 6) | speed
     ser.write(bytes([command]))
 
-send_motor_command(RIGHT_MOTOR, 1, 255)
-time.sleep(1)
-ser.close()
+def m(left, right, duration):
+    left_direction = 1
+    if left > 0:
+        left_direction = 0
+    right_direction = 1
+    if right > 0:
+        right_direction = 0
+    send_motor_command(LEFT_MOTOR, left_direction, abs(left))
+    send_motor_command(RIGHT_MOTOR, right_direction, abs(right))
+    if duration > 0:
+        time.sleep(duration / 1000)
+        send_motor_command(LEFT_MOTOR, 1, 0)
+        send_motor_command(RIGHT_MOTOR, 1, 0)
 
-"""
 camera = PiCamera()
-camera.resolution = (320, 200)
+camera.resolution = (320, 192)
 camera.rotation = 0
-rawCapture = PiRGBArray(camera, size=(320, 200))
-time.sleep(0.1)
+camera.framerate = 30
+rawCapture = PiRGBArray(camera, size=(320, 192))
+
+start_time = time.time()
+number_of_frames = 0 # frame counter for FPS
 
 for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):    
-    image = frame.array    
-    Blackline = cv2.inRange(image, (0,0,0), (75,75,75))    
-    kernel = np.ones((3,3), np.uint8)
-    Blackline = cv2.erode(Blackline, kernel, iterations=2)
+    original_image = frame.array
+    image = original_image[0:150, 0:320]    
+    image = cv2.GaussianBlur(image, ((9, 9)), 3, 3)
+   
+    Blackline = cv2.inRange(image, (0,0,0), (75,75,75))
 
     contours_blk, hierarchy_blk = cv2.findContours(Blackline.copy(),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     
@@ -75,22 +94,29 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
         setpoint = 160
         error = int(x_min - setpoint)
         ang = int(ang)
-        speed = 255  # Setze die Geschwindigkeit auf maximal
-        send_motor_command(LEFT_MOTOR, 1 if error > 0 else 0, abs(error))  # Steuerung des linken Motors basierend auf dem Fehler
-        send_motor_command(RIGHT_MOTOR, 1 if error < 0 else 0, abs(error))  # Steuerung des rechten Motors basierend auf dem Fehler
+        #send_motor_command(LEFT_MOTOR, 1 if error > 0 else 0, abs(error))  # Steuerung des linken Motors basierend auf dem Fehler
+        #send_motor_command(RIGHT_MOTOR, 1 if error < 0 else 0, abs(error))  # Steuerung des rechten Motors basierend auf dem Fehler
 
         box = cv2.boxPoints(blackbox)
         box = np.int0(box)
         cv2.drawContours(image,[box],0,(0,0,255),3)    
-        cv2.putText(image,str(ang),(10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        cv2.putText(image,str(error),(10, 320), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-        cv2.line(image, (int(x_min),200 ), (int(x_min),250 ), (255,0,0),3)
+        cv2.putText(image, str(error),(10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        number_of_frames = number_of_frames + 1
+        cv2.putText(image, str(int(number_of_frames / (time.time() - start_time))),(270, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.line(image, (int(x_min), 200), (int(x_min), 250), (255, 0, 0), 3)
+
+        # set motors
+        m(BASE_SPEED + (SENSITIVITY * error), BASE_SPEED - (SENSITIVITY * error), 0)
             
-    cv2.imshow("orginal with line", image)    
+    cv2.imshow("orginal_image", original_image) 
+    cv2.imshow("blurred_image", image) 
+    cv2.imshow("black", Blackline)       
+   
     rawCapture.truncate(0)    
     key = cv2.waitKey(1) & 0xFF    
     if key == ord("q"):
+        m(0, 0, 0)
+        cv2.destroyAllWindows()
+        ser.close()
         break
 
-ser.close()
-"""

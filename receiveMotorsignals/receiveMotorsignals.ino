@@ -3,7 +3,13 @@
 #define MOTOR_A_IN2 2
 #define MOTOR_B_EN 6
 #define MOTOR_B_IN1 7
-#define MOTOR_B_IN2 8
+#define MOTOR_B_IN2 8 //motors
+
+#include <Adafruit_NeoPixel.h>
+#include <avr/power.h>
+#define PIN A0
+#define NUMPIXELS 8
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
   Serial.begin(115200);
@@ -21,6 +27,11 @@ void setup() {
   digitalWrite(MOTOR_B_IN1, LOW);
   digitalWrite(MOTOR_B_IN2, LOW);
   digitalWrite(MOTOR_B_EN, HIGH);
+
+  // set all 8 LEDS to white
+  pixels.begin();
+  for (int i = 0; i < 8; ++i) pixels.setPixelColor(i, pixels.Color(255, 255, 255));
+  pixels.show();
 }
 
 void loop() {

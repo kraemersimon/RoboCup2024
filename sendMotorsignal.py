@@ -27,13 +27,6 @@ def m(left, right, duration):
 
 ser = serial.Serial('/dev/ttyUSB0', 115200)
 time.sleep(2)
-
-# send_motor_command(LEFT_MOTOR, 0, 255)
-# send_motor_command(RIGHT_MOTOR, 0, 255)
-# time.sleep(0.5)
-
-# send_motor_command(RIGHT_MOTOR, 0, 0)  
-# send_motor_command(LEFT_MOTOR, 0, 0)
 m(0, 100, 200)
 time.sleep(1)
 ser.close()
