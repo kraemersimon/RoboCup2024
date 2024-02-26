@@ -6,55 +6,21 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 
 ser = serial.Serial('/dev/ttyUSB0', 115200)
+time.sleep(2) # wait for Nano to reboot
 
 LEFT_MOTOR = 0
 RIGHT_MOTOR = 1
 
 def send_motor_command(motor, direction, speed):
-    print("Executing: send_motor_command(", motor, "), (", direction, "), (", speed, ")")
-
     speed = min(speed, 255)  # Begrenzen Sie die Geschwindigkeit auf 255
-    #speed = speed // 4  # Teilen Sie die Geschwindigkeit durch 4, um sie in den Bereich von 0 bis 63 zu bringen
     command = (motor << 7) | (direction << 6) | speed
     ser.write(bytes([command]))
 
-def m(left, right, duration):
-    left = left * 4 - 1
-    right = right * 4 - 1
-
-    left_is_forward = 1
-    right_is_forward = 1
-
-    if left < 0:
-        left_is_forward = 0
-    if right < 0:
-        right_is_forward = 0
-
-    send_motor_command(LEFT_MOTOR, left_is_forward, abs(left))
-    send_motor_command(RIGHT_MOTOR, right_is_forward, abs(left))
-    if duration > 0:
-        time.sleep(int(duration / 1000))
-
-        # TODO: Arduino soll ganz stoppen bei 0 und nicht nur ausrollen
-        send_motor_command(LEFT_MOTOR, 1, 0)
-        send_motor_command(RIGHT_MOTOR, 1, 0)
-
-#m(64, 64, 1000)
-# send_motor_command(0, 1, 255)
-# time.sleep(1)
-# send_motor_command(1, 1, 255)
-# time.sleep(1)
-# send_motor_command(0, 1, 0)
-# time.sleep(1)
-# send_motor_command(1, 1, 0)
-# time.sleep(1)
-send_motor_command(LEFT_MOTOR, 1, 50)
+send_motor_command(RIGHT_MOTOR, 1, 255)
 time.sleep(1)
 ser.close()
 
 """
-
-
 camera = PiCamera()
 camera.resolution = (320, 200)
 camera.rotation = 0
@@ -119,15 +85,12 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
         cv2.putText(image,str(ang),(10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         cv2.putText(image,str(error),(10, 320), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
         cv2.line(image, (int(x_min),200 ), (int(x_min),250 ), (255,0,0),3)
+            
     cv2.imshow("orginal with line", image)    
     rawCapture.truncate(0)    
-
     key = cv2.waitKey(1) & 0xFF    
     if key == ord("q"):
-        print('q')
-        send_motor_command(LEFT_MOTOR, 1, 0)
-        send_motor_command(RIGHT_MOTOR, 1, 0)
-        cv2.destroyAllWindows()
-        ser.close()
-        exit(0)
+        break
+
+ser.close()
 """

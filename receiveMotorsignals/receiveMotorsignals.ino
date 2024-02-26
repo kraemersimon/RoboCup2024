@@ -13,6 +13,14 @@ void setup() {
   pinMode(MOTOR_B_EN, OUTPUT);
   pinMode(MOTOR_B_IN1, OUTPUT);
   pinMode(MOTOR_B_IN2, OUTPUT);
+
+  // stop motors
+  digitalWrite(MOTOR_A_IN1, LOW);
+  digitalWrite(MOTOR_A_IN2, LOW);
+  digitalWrite(MOTOR_A_EN, HIGH);
+  digitalWrite(MOTOR_B_IN1, LOW);
+  digitalWrite(MOTOR_B_IN2, LOW);
+  digitalWrite(MOTOR_B_EN, HIGH);
 }
 
 void loop() {
@@ -27,21 +35,30 @@ void loop() {
 
     // Ensure speed is within the valid range
     speed = constrain(speed, 0, 255);
+    // full stop if speed = 0
+    if (speed == 0) {
+      if (motor == 1) {
+          digitalWrite(MOTOR_A_IN1, HIGH);
+          digitalWrite(MOTOR_A_IN2, HIGH);
+          digitalWrite(MOTOR_A_EN, HIGH);
+      } else {
+          digitalWrite(MOTOR_B_IN1, HIGH);
+          digitalWrite(MOTOR_B_IN2, HIGH);
+          digitalWrite(MOTOR_B_EN, HIGH);
+      }
+    }
 
     if (motor == 0) { // Left Motor
       if (speed == 0) { // Stop
         digitalWrite(MOTOR_A_IN1, LOW);
         digitalWrite(MOTOR_A_IN2, LOW);
-        Serial.println("Motor A stop");
       } else {
         if (direction == 0) { // Reverse
           digitalWrite(MOTOR_A_IN1, HIGH);
           digitalWrite(MOTOR_A_IN2, LOW);
-          Serial.println("Motor A reverse");
         } else { // Forward
           digitalWrite(MOTOR_A_IN1, LOW);
-          digitalWrite(MOTOR_A_IN2, HIGH);
-          Serial.println("Motor A forward");
+          digitalWrite(MOTOR_A_IN2, HIGH);;
         }
       }
       analogWrite(MOTOR_A_EN, speed); // Send speed to Left Motor
@@ -49,16 +66,13 @@ void loop() {
       if (speed == 0) { // Stop
         digitalWrite(MOTOR_B_IN1, LOW);
         digitalWrite(MOTOR_B_IN2, LOW);
-        Serial.println("Motor B stop");
       } else {
         if (direction == 0) { // Reverse
           digitalWrite(MOTOR_B_IN1, HIGH);
           digitalWrite(MOTOR_B_IN2, LOW);
-          Serial.println("Motor B reverse");
         } else { // Forward
           digitalWrite(MOTOR_B_IN1, LOW);
           digitalWrite(MOTOR_B_IN2, HIGH);
-          Serial.println("Motor B forward");
         }
       }
       analogWrite(MOTOR_B_EN, speed); // Send speed to Right Motor

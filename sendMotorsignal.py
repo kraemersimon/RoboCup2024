@@ -10,38 +10,30 @@ def send_motor_command(motor, direction, speed):
     command = (motor << 7) | (direction << 6) | speed
     ser.write(bytes([command]))
 
+def m(left, right, duration):
+    left_direction = 1
+    if left > 0:
+        left_direction = 0
+    right_direction = 1
+    if right > 0:
+        right_direction = 0
+    send_motor_command(LEFT_MOTOR, left_direction, abs(left))
+    send_motor_command(RIGHT_MOTOR, right_direction, abs(right))
+    if duration > 0:
+        time.sleep(duration / 1000)
+        send_motor_command(LEFT_MOTOR, 1, 0)
+        send_motor_command(RIGHT_MOTOR, 1, 0)
+
+
 ser = serial.Serial('/dev/ttyUSB0', 115200)
-time.sleep(5)
+time.sleep(2)
 
-send_motor_command(LEFT_MOTOR, 0, 255)  # Beispiel: Setze die Geschwindigkeit des linken Motors auf 255 (maximal)
-print("left motor forward")
-time.sleep(0.5)
+# send_motor_command(LEFT_MOTOR, 0, 255)
+# send_motor_command(RIGHT_MOTOR, 0, 255)
+# time.sleep(0.5)
 
-send_motor_command(LEFT_MOTOR, 1, 255)  # Beispiel: Setze die Geschwindigkeit des linken Motors auf 255 (maximal)
-print("left motor backwards")
-time.sleep(0.5)
-
-send_motor_command(LEFT_MOTOR, 0, 0)  # Beispiel: Stoppe den linken Motor
-time.sleep(0.5)
-
-send_motor_command(RIGHT_MOTOR, 0, 255)  # Beispiel: Setze die Geschwindigkeit des rechten Motors auf 255 (maximal)
-print("right motor forward")
-time.sleep(0.5)
-
-send_motor_command(RIGHT_MOTOR, 1, 255)  # Beispiel: Setze die Geschwindigkeit des rechten Motors auf 255 (maximal)
-print("right motor backwards")
-time.sleep(0.5)
-
-send_motor_command(RIGHT_MOTOR, 0, 80)
-print("right motor 80 speed")
-time.sleep(0.5)
-
-send_motor_command(LEFT_MOTOR, 1, 80)
-print("left motor backwards 80 speed")
-time.sleep(0.5)
-
-
-send_motor_command(RIGHT_MOTOR, 0, 0)  # Beispiel: Stoppe den rechten Motor
-send_motor_command(LEFT_MOTOR, 0, 0)  # Beispiel: Stoppe den rechten Motor
-
-ser.close() #a short test, if my new git setup works
+# send_motor_command(RIGHT_MOTOR, 0, 0)  
+# send_motor_command(LEFT_MOTOR, 0, 0)
+m(0, 100, 200)
+time.sleep(1)
+ser.close()
