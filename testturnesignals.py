@@ -11,7 +11,6 @@ time.sleep(2) # wait for Nano to reboot
 LEFT_MOTOR = 0
 RIGHT_MOTOR = 1
 
-
 # linefollowing paramters
 BASE_SPEED = 150
 SENSITIVITY = 3
@@ -49,11 +48,15 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     original_image = frame.array
     image = original_image[0:150, 0:320]    
     image = cv2.GaussianBlur(image, ((9, 9)), 3, 3)
+   
     Blackline = cv2.inRange(image, (0,0,0), (75,75,75))
+    Greenline = cv2.inRange(image, (0,255,0), (75,255,75))
 
     contours_blk, hierarchy_blk = cv2.findContours(Blackline.copy(),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+    contours_grn, hierarchy_grn = cv2.findContours(Greenline.copy(),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     
     contours_blk_len = len(contours_blk)
+    contours_grn_len = len(contours_grn)
     if contours_blk_len > 0 :
         if contours_blk_len == 1 :
             blackbox = cv2.minAreaRect(contours_blk[0])
@@ -73,7 +76,7 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
                 canditates_off_bottom=[]
                 for con_num in range ((contours_blk_len - off_bottom), contours_blk_len):
                     (y_highest,con_highest,x_min, y_min) = canditates[con_num]        
-                    total_distance = (abs(x_min - x_last)**2 + abs(y_min - y_last)**2)**0.5
+                    total_distance = (abs(x_min - x_last)*2 + abs(y_min - y_last)2)*0.5
                     canditates_off_bottom.append((total_distance,con_highest))
                 canditates_off_bottom = sorted(canditates_off_bottom)
                 (total_distance,con_highest) = canditates_off_bottom[0]
@@ -107,9 +110,22 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
         # set motors
         m(BASE_SPEED + (SENSITIVITY * error), BASE_SPEED - (SENSITIVITY * error), 0)
             
+        if contours_grn_len > 0:
+            greenbox = cv2.minAreaRect(contours_grn[0])
+            (gx_min, gy_min), (gw_min, gh_min), gang = greenbox
+            gbox = cv2.boxPoints(greenbox)
+            gbox = np.int0(gbox)
+            cv2.drawContours(image,[gbox],0,(255,0,255),3) # draw pink box around green dot
+            cv2.line(image, (int(gx_min), 200), (int(gx_min), 250), (255, 0, 255), 3) # draw pink line at center of green dot
+            if gx_min < x_min: # if green dot is to the left of the black line
+                m(BASE_SPEED + (SENSITIVITY * error), BASE_SPEED - (SENSITIVITY * error), 0) # turn left
+            else: # if green dot is to the right of the black line
+                m(BASE_SPEED - (SENSITIVITY * error), BASE_SPEED + (SENSITIVITY * error), 0) # turn right
+            
     cv2.imshow("orginal_image", original_image) 
     cv2.imshow("blurred_image", image) 
     cv2.imshow("black", Blackline)       
+    cv2.imshow("green", Greenline) # new window to show green dot detection
    
     rawCapture.truncate(0)    
     key = cv2.waitKey(1) & 0xFF    
@@ -117,5 +133,4 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
         m(0, 0, 0)
         cv2.destroyAllWindows()
         ser.close()
-        break
-
+        break

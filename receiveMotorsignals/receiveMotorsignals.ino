@@ -4,6 +4,7 @@
 #define MOTOR_B_EN 6
 #define MOTOR_B_IN1 7
 #define MOTOR_B_IN2 8 //motors
+#define PIN_BAT_VOL A7 // analog Pin to measure battery voltage
 
 #include <Adafruit_NeoPixel.h>
 #include <avr/power.h>
@@ -32,6 +33,20 @@ void setup() {
   pixels.begin();
   for (int i = 0; i < 8; ++i) pixels.setPixelColor(i, pixels.Color(255, 255, 255));
   pixels.show();
+  
+  if (getBatteryVoltage() < 7.5f) {
+    for (int j = 0; j < 10; ++j) {
+      for (int i = 0; i < 8; ++i) pixels.setPixelColor(i, pixels.Color(255, 0, 0));
+      pixels.show();
+      delay(200);
+      for (int i = 0; i < 8; ++i) pixels.setPixelColor(i, pixels.Color(255, 255, 255));
+      pixels.show();
+      delay(200);
+    }
+    pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+    pixels.setPixelColor(7, pixels.Color(255, 0, 0));
+    pixels.show();
+  }
 }
 
 void loop() {
@@ -89,4 +104,9 @@ void loop() {
       analogWrite(MOTOR_B_EN, speed); // Send speed to Right Motor
     }
   }
+}
+
+// returns battery voltage in volts
+float getBatteryVoltage() {
+  return (analogRead(PIN_BAT_VOL) / 759.0f) * 7.72;
 }
